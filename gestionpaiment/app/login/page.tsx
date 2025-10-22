@@ -9,72 +9,76 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
     if (!email || !password) {
       setError('Veuillez remplir tous les champs')
       return
     }
     setError('')
-    console.log({ email, password })
     alert(`Connecté avec ${email}`)
     setEmail('')
     setPassword('')
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-gradient-x">
-      <div className="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md transform transition-all hover:scale-105 duration-500">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-500 animate-gradient-x px-4">
+      <div className="relative bg-white/10 backdrop-blur-lg border border-white/20 p-10 rounded-3xl shadow-2xl w-full max-w-md transition-all duration-500 hover:scale-105">
         
-        {/* Titre avec icône billet bleu */}
-        <h2 className="text-3xl font-bold mb-8 text-center text-gray-800 flex items-center justify-center gap-2">
-          <FaMoneyBillWave className="text-blue-500 animate-bounce" /> Connexion
-        </h2>
+        {/* Effet lumineux */}
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-3xl opacity-20 blur-2xl"></div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Email */}
-          <div className="relative">
-            <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 hover:shadow-lg"
-              required
-            />
-          </div>
+        <div className="relative z-10">
+          {/* Titre avec icône */}
+          <h2 className="text-3xl font-bold mb-8 text-center text-white flex items-center justify-center gap-3">
+            <FaMoneyBillWave className="text-cyan-300 animate-bounce" />
+            Connexion
+          </h2>
 
-          {/* Mot de passe */}
-          <div className="relative">
-            <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="password"
-              placeholder="Mot de passe"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 hover:shadow-lg"
-              required
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email */}
+            <div className="relative">
+              <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-300" />
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-3 pl-10 rounded-lg bg-white/20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition"
+              />
+            </div>
 
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+            {/* Mot de passe */}
+            <div className="relative">
+              <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-300" />
+              <input
+                type="password"
+                placeholder="Mot de passe"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-3 pl-10 rounded-lg bg-white/20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-400 transition"
+              />
+            </div>
 
-          {/* Bouton avec icône billet bleu */}
-          <button
-            type="submit"
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 hover:shadow-xl transition transform hover:-translate-y-1 duration-300"
-          >
-            <FaMoneyBillWave className="text-blue-500 animate-bounce" /> Se connecter
-          </button>
-        </form>
+            {error && <p className="text-red-300 text-sm">{error}</p>}
 
-        <p className="text-gray-500 text-center mt-6">
-          Pas de compte ?{' '}
-          <Link href="/register" className="text-purple-600 font-semibold hover:underline">
-            Inscrivez-vous
-          </Link>
-        </p>
+            {/* Bouton */}
+            <button
+              type="submit"
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-400 to-purple-500 text-white p-3 rounded-lg font-semibold shadow-lg hover:shadow-cyan-500/50 transition-transform hover:-translate-y-1 duration-300"
+            >
+              <FaMoneyBillWave className="text-white animate-pulse" />
+              Se connecter
+            </button>
+          </form>
+
+          <p className="text-gray-200 text-center mt-6">
+            Pas de compte ?{' '}
+            <Link href="/register" className="text-cyan-300 font-semibold hover:underline">
+              Inscrivez-vous
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   )
