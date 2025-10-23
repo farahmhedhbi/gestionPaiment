@@ -5,25 +5,34 @@ import { useEffect, useState } from 'react'
 
 export default function Home() {
   const [isVisible, setIsVisible] = useState(false)
+  const [floatingEmojis, setFloatingEmojis] = useState<Array<{
+    id: number
+    left: string
+    delay: string
+    duration: string
+    size: string
+    opacity: string
+  }>>([])
 
   useEffect(() => {
     setIsVisible(true)
+    
+    // Générer les emojis uniquement côté client
+    const emojis = Array.from({ length: 16 }).map((_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      delay: `${Math.random() * 8}s`,
+      duration: `${12 + Math.random() * 8}s`,
+      size: `${1.8 + Math.random() * 2.2}rem`,
+      opacity: `${0.25 + Math.random() * 0.5}`,
+    }))
+    setFloatingEmojis(emojis)
   }, [])
 
-  // Génération d’emojis 💸 flottants avec positions aléatoires
-  const floatingEmojis = Array.from({ length: 16 }).map((_, i) => ({
-    id: i,
-    left: `${Math.random() * 100}%`,
-    delay: `${Math.random() * 8}s`,
-    duration: `${12 + Math.random() * 8}s`,
-    size: `${1.8 + Math.random() * 2.2}rem`,
-    opacity: `${0.25 + Math.random() * 0.5}`,
-  }))
-
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 overflow-hidden text-white">
-
-      {/* 💸 Arrière-plan animé */}
+    <div className="relative min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 overflow-hidden">
+      
+      {/* 💸 Floating Money Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {floatingEmojis.map((emoji) => (
           <span
@@ -44,15 +53,15 @@ export default function Home() {
         ))}
       </div>
 
-      {/* 🌟 Header */}
+      {/* Header */}
       <header className="relative z-10 backdrop-blur-md bg-white/5 border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
-
+            
             {/* Logo */}
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20">
                   💸
                 </div>
                 <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-xl blur opacity-25"></div>
@@ -81,8 +90,8 @@ export default function Home() {
         </div>
       </header>
 
-      {/* 🏠 Hero Section */}
-      <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
+      {/* Hero Section */}
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <div
           className={`transition-all duration-1000 transform ${
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
@@ -97,7 +106,7 @@ export default function Home() {
           </div>
 
           {/* Title */}
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-8 leading-tight tracking-tight">
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold text-white mb-8 leading-tight tracking-tight">
             <span className="block">Révolutionnez</span>
             <span className="block bg-gradient-to-r from-cyan-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent bg-size-200 animate-gradient">
               vos paiements
@@ -105,7 +114,7 @@ export default function Home() {
           </h1>
 
           {/* CTA */}
-          <div className="flex justify-center space-x-6 mt-12">
+          <div className="flex justify-center space-x-6 mb-20">
             <Link
               href="/register"
               className="group relative bg-gradient-to-r from-cyan-500 to-purple-600 text-white px-12 py-4 rounded-2xl font-semibold text-lg hover:shadow-2xl hover:shadow-cyan-500/30 transition-all duration-500 transform hover:-translate-y-1"
@@ -118,7 +127,7 @@ export default function Home() {
         </div>
       </main>
 
-      {/* 🌈 Animations */}
+      {/* Animations */}
       <style jsx>{`
         @keyframes float {
           0% {
