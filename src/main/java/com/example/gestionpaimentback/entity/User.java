@@ -39,6 +39,23 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    // NOUVEAUX CHAMPS POUR LES COORDONNÉES BANCAIRES
+    @Size(max = 20)
+    @Column(name = "cin")
+    private String cin;
+
+    @Size(max = 50)
+    @Column(name = "rib")
+    private String rib;
+
+    @Size(max = 100)
+    @Column(name = "bank_name")
+    private String bankName;
+
+    @Size(max = 50)
+    @Column(name = "account_number")
+    private String accountNumber;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -74,6 +91,19 @@ public class User {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    // NOUVEAUX GETTERS/SETTERS
+    public String getCin() { return cin; }
+    public void setCin(String cin) { this.cin = cin; }
+
+    public String getRib() { return rib; }
+    public void setRib(String rib) { this.rib = rib; }
+
+    public String getBankName() { return bankName; }
+    public void setBankName(String bankName) { this.bankName = bankName; }
+
+    public String getAccountNumber() { return accountNumber; }
+    public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
 
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
