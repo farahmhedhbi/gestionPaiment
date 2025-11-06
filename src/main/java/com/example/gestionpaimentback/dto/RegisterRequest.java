@@ -7,9 +7,9 @@ public class RegisterRequest {
     private String lastName;
     private String email;
     private String password;
-    private Set<String> roles; // "admin", "formateur", "coordinateur"
+    private Set<String> roles;
 
-    // Constructeurs
+
     public RegisterRequest() {}
 
     public RegisterRequest(String firstName, String lastName, String email, String password, Set<String> roles) {
@@ -20,7 +20,7 @@ public class RegisterRequest {
         this.roles = roles;
     }
 
-    // Getters et Setters
+
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
 

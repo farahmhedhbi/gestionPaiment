@@ -25,14 +25,14 @@ public class VerificationCode {
     @Column(nullable = false)
     private boolean used = false;
 
-    // Constructeurs
+
     public VerificationCode() {}
 
     public VerificationCode(String email, String code) {
         this.email = email;
         this.code = code;
         this.createdAt = LocalDateTime.now();
-        this.expiresAt = LocalDateTime.now().plusMinutes(10); // 10 minutes d'expiration
+        this.expiresAt = LocalDateTime.now().plusMinutes(10);
     }
 
     // Getters et Setters

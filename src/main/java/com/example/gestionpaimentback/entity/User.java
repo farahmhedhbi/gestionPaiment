@@ -39,7 +39,7 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    // NOUVEAUX CHAMPS POUR LES COORDONNÉES BANCAIRES
+
     @Size(max = 20)
     @Column(name = "cin")
     private String cin;

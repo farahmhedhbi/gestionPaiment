@@ -42,7 +42,7 @@ public class AuthService {
                     .orElseThrow(() -> new RuntimeException("Error: Role FORMATEUR not found."));
             roles.add(formateurRole);
         } else {
-            // Assigner les rôles spécifiés
+            //  les rôles spécifiés
             registerRequest.getRoles().forEach(role -> {
                 switch (role.toLowerCase()) {
                     case "admin":

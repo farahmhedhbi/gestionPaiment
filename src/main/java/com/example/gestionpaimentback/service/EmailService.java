@@ -24,7 +24,7 @@ public class EmailService {
         return String.valueOf(100000 + random.nextInt(900000));
     }
 
-    // ENVOYER EMAIL - Version Simple
+    // ENVOYER EMAIL
     public void envoyerCode(String emailUtilisateur, String code) {
         try {
             // 1. Préparer l'email
@@ -42,15 +42,15 @@ public class EmailService {
             emailSender.send(message);
 
             // 3. Confirmation
-            System.out.println("✅ EMAIL ENVOYÉ : " + emailUtilisateur);
-            System.out.println("🔐 CODE : " + code);
+            System.out.println(" EMAIL ENVOYÉ : " + emailUtilisateur);
+            System.out.println(" CODE : " + code);
 
         } catch (Exception e) {
             // Si erreur, on montre le code dans la console
-            System.out.println("❌ Email non envoyé, mais CODE DISPONIBLE :");
-            System.out.println("📧 Pour : " + emailUtilisateur);
-            System.out.println("🔐 Code : " + code);
-            System.out.println("💡 Copie ce code pour te connecter !");
+            System.out.println(" Email non envoyé, mais CODE DISPONIBLE :");
+            System.out.println(" Pour : " + emailUtilisateur);
+            System.out.println(" Code : " + code);
+            System.out.println(" Copie ce code pour te connecter !");
         }
     }
 
