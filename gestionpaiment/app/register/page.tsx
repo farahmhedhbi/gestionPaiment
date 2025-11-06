@@ -51,14 +51,14 @@ export default function Register() {
         }),
       })
 
-      // Essayer de parser la réponse comme JSON
+      
       let responseData;
       const responseText = await response.text();
       
       try {
         responseData = responseText ? JSON.parse(responseText) : {};
       } catch (parseError) {
-        // Si le parsing JSON échoue, utiliser le texte brut
+        
         responseData = { error: responseText };
       }
 
@@ -72,7 +72,7 @@ export default function Register() {
         throw new Error(errorMessage);
       }
 
-      console.log('✅ Utilisateur créé :', responseData)
+      console.log(' Utilisateur créé :', responseData)
       setSuccess('Inscription réussie ! Vous pouvez maintenant vous connecter.')
       
       // Réinitialiser le formulaire
@@ -91,7 +91,7 @@ export default function Register() {
     } catch (err: any) {
       console.error('Erreur inscription:', err)
       
-      // Nettoyer le message d'erreur
+      
       let errorMessage = err.message || 'Une erreur est survenue lors de l\'inscription';
       
       // Supprimer les préfixes inutiles
