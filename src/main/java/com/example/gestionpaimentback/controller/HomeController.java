@@ -24,19 +24,19 @@ public class HomeController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         HttpSession session = request.getSession(false);
 
-        System.out.println("🏠 HomeController appelé");
-        System.out.println("👤 Utilisateur: " + authentication.getName());
-        System.out.println("🔐 Authentifié: " + authentication.isAuthenticated());
-        System.out.println("🎯 Rôles: " + authentication.getAuthorities());
-        System.out.println("📝 Classe: " + authentication.getClass().getSimpleName());
-        System.out.println("💾 Session: " + (session != null ? session.getId() : "AUCUNE"));
+        System.out.println("HomeController appelé");
+        System.out.println("Utilisateur: " + authentication.getName());
+        System.out.println("Authentifié: " + authentication.isAuthenticated());
+        System.out.println("Rôles: " + authentication.getAuthorities());
+        System.out.println("Classe: " + authentication.getClass().getSimpleName());
+        System.out.println("Session: " + (session != null ? session.getId() : "AUCUNE"));
 
-        // Vérifier si c'est un utilisateur anonyme
+
         if (authentication instanceof AnonymousAuthenticationToken ||
                 !authentication.isAuthenticated() ||
                 "anonymousUser".equals(authentication.getName())) {
 
-            System.out.println("🚫 ACCÈS REFUSÉ - UTILISATEUR ANONYME");
+            System.out.println(" ACCÈS REFUSÉ - UTILISATEUR ANONYME");
             throw new AccessDeniedException("Accès non autorisé");
         }
 
@@ -53,7 +53,7 @@ public class HomeController {
         homeData.put("sessionActive", session != null);
         homeData.put("sessionId", session != null ? session.getId() : "none");
 
-        System.out.println("✅ Données envoyées à l'utilisateur: " + authentication.getName());
+        System.out.println("Données envoyées à l'utilisateur: " + authentication.getName());
 
         return homeData;
     }

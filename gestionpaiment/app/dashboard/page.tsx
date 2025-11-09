@@ -117,7 +117,7 @@ export default function DashboardPage() {
 
   const handleCancelEdit = () => {
     setIsEditing(false)
-    fetchUserProfile() // Recharger les données originales
+    fetchUserProfile() 
   }
 
   const handleLogout = async () => {
@@ -547,7 +547,7 @@ export default function DashboardPage() {
       <footer className="bg-slate-800/80 backdrop-blur-lg border-t border-cyan-500/20 p-6 mt-12">
         <div className="container mx-auto text-center">
           <p className="text-cyan-100/60 text-sm">
-            © 2024 Espace Personnel - Conçu avec soin pour vous
+            © 2025 Espace Personnel - Conçu avec soin pour vous
           </p>
           <div className="flex justify-center gap-6 mt-3">
             <span className="text-cyan-400/60 text-xs">🔒 Sécurisé</span>

@@ -44,18 +44,18 @@ public class AuthController {
     @PostMapping("/signin")
     public ResponseEntity<?> initiateLogin(@RequestBody LoginRequest loginRequest) {
         try {
-            System.out.println("🔐 CONNEXION TENTATIVE : " + loginRequest.getEmail());
+            System.out.println("CONNEXION TENTATIVE : " + loginRequest.getEmail());
 
             UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(loginRequest.getEmail());
 
             if (!passwordEncoder.matches(loginRequest.getPassword(), userDetails.getPassword())) {
-                System.out.println("❌ MOT DE PASSE INCORRECT");
+                System.out.println(" MOT DE PASSE INCORRECT");
                 Map<String, String> errorResponse = new HashMap<>();
                 errorResponse.put("error", "Mot de passe invalide!");
                 return ResponseEntity.badRequest().body(errorResponse);
             }
 
-            System.out.println("✅ UTILISATEUR TROUVÉ - ENVOI DU CODE...");
+            System.out.println(" UTILISATEUR TROUVÉ - ENVOI DU CODE...");
             emailService.sauvegarderEtEnvoyerCode(loginRequest.getEmail());
 
             Map<String, Object> response = new HashMap<>();
@@ -67,12 +67,12 @@ public class AuthController {
             return ResponseEntity.ok(response);
 
         } catch (UsernameNotFoundException e) {
-            System.out.println("❌ UTILISATEUR NON TROUVÉ : " + loginRequest.getEmail());
+            System.out.println(" UTILISATEUR NON TROUVÉ : " + loginRequest.getEmail());
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Utilisateur non trouvé avec cet email");
             return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
-            System.out.println("❌ ERREUR CONNEXION : " + e.getMessage());
+            System.out.println(" ERREUR CONNEXION : " + e.getMessage());
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Erreur de connexion: " + e.getMessage());
             return ResponseEntity.badRequest().body(errorResponse);
@@ -82,12 +82,12 @@ public class AuthController {
     @PostMapping("/verify-code")
     public ResponseEntity<?> verifyCodeAndLogin(@RequestBody VerifyCodeRequest verifyCodeRequest, HttpServletRequest request) {
         try {
-            System.out.println("🔐 VÉRIFICATION CODE : " + verifyCodeRequest.getEmail());
+            System.out.println("VÉRIFICATION CODE : " + verifyCodeRequest.getEmail());
 
             boolean isValid = emailService.verifierCode(verifyCodeRequest.getEmail(), verifyCodeRequest.getCode());
 
             if (!isValid) {
-                System.out.println("❌ CODE INVALIDE : " + verifyCodeRequest.getCode());
+                System.out.println("CODE INVALIDE : " + verifyCodeRequest.getCode());
                 Map<String, String> errorResponse = new HashMap<>();
                 errorResponse.put("error", "Code invalide ou expiré!");
                 return ResponseEntity.badRequest().body(errorResponse);
@@ -95,27 +95,27 @@ public class AuthController {
 
             UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(verifyCodeRequest.getEmail());
 
-            // ✅ CRÉATION DE L'AUTHENTIFICATION
+
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             userDetails,
-                            null, // Pas besoin du password ici
+                            null,
                             userDetails.getAuthorities()
                     );
 
-            // ✅ SAUVEGARDE DANS LE CONTEXTE
+
             SecurityContext securityContext = SecurityContextHolder.getContext();
             securityContext.setAuthentication(authentication);
 
-            // ✅ CRÉATION EXPLICITE DE LA SESSION
+
             HttpSession session = request.getSession(true);
             session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext);
-            session.setMaxInactiveInterval(86400); // 24 heures
+            session.setMaxInactiveInterval(86400);
 
-            System.out.println("✅ CONNEXION RÉUSSIE : " + verifyCodeRequest.getEmail());
-            System.out.println("🔐 SESSION CRÉÉE - ID: " + session.getId());
-            System.out.println("👤 UTILISATEUR AUTHENTIFIÉ: " + authentication.getName());
-            System.out.println("🎯 RÔLES: " + authentication.getAuthorities());
+            System.out.println(" CONNEXION RÉUSSIE : " + verifyCodeRequest.getEmail());
+            System.out.println(" SESSION CRÉÉE - ID: " + session.getId());
+            System.out.println(" UTILISATEUR AUTHENTIFIÉ: " + authentication.getName());
+            System.out.println(" RÔLES: " + authentication.getAuthorities());
 
             List<String> roles = userDetails.getAuthorities().stream()
                     .map(item -> item.getAuthority())
@@ -134,12 +134,12 @@ public class AuthController {
             return ResponseEntity.ok(response);
 
         } catch (UsernameNotFoundException e) {
-            System.out.println("❌ UTILISATEUR NON TROUVÉ LORS DE LA VÉRIFICATION");
+            System.out.println(" UTILISATEUR NON TROUVÉ LORS DE LA VÉRIFICATION");
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Utilisateur non trouvé");
             return ResponseEntity.badRequest().body(errorResponse);
         } catch (Exception e) {
-            System.out.println("❌ ERREUR VÉRIFICATION : " + e.getMessage());
+            System.out.println("ERREUR VÉRIFICATION : " + e.getMessage());
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Erreur de vérification: " + e.getMessage());
             return ResponseEntity.badRequest().body(errorResponse);
@@ -149,7 +149,7 @@ public class AuthController {
     @PostMapping("/resend-code")
     public ResponseEntity<?> resendCode(@RequestBody ResendCodeRequest resendCodeRequest) {
         try {
-            System.out.println("🔄 RENVOI CODE : " + resendCodeRequest.getEmail());
+            System.out.println(" RENVOI CODE : " + resendCodeRequest.getEmail());
             emailService.sauvegarderEtEnvoyerCode(resendCodeRequest.getEmail());
 
             Map<String, Object> response = new HashMap<>();
@@ -159,7 +159,7 @@ public class AuthController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            System.out.println("❌ ERREUR RENVOI CODE : " + e.getMessage());
+            System.out.println(" ERREUR RENVOI CODE : " + e.getMessage());
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Erreur lors de l'envoi du code: " + e.getMessage());
             return ResponseEntity.badRequest().body(errorResponse);
@@ -169,17 +169,17 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody RegisterRequest registerRequest) {
         try {
-            System.out.println("📝 INSCRIPTION : " + registerRequest.getEmail());
+            System.out.println(" INSCRIPTION : " + registerRequest.getEmail());
 
             if (authService.existsByEmail(registerRequest.getEmail())) {
-                System.out.println("❌ EMAIL DÉJÀ UTILISÉ : " + registerRequest.getEmail());
+                System.out.println(" EMAIL DÉJÀ UTILISÉ : " + registerRequest.getEmail());
                 Map<String, String> errorResponse = new HashMap<>();
                 errorResponse.put("error", "Cet email est déjà utilisé!");
                 return ResponseEntity.badRequest().body(errorResponse);
             }
 
             User user = authService.registerUser(registerRequest);
-            System.out.println("✅ UTILISATEUR INSCRIT : " + user.getEmail());
+            System.out.println("UTILISATEUR INSCRIT : " + user.getEmail());
 
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Utilisateur inscrit avec succès!");
@@ -194,7 +194,7 @@ public class AuthController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            System.out.println("❌ ERREUR INSCRIPTION : " + e.getMessage());
+            System.out.println(" ERREUR INSCRIPTION : " + e.getMessage());
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Erreur lors de l'inscription: " + e.getMessage());
             return ResponseEntity.badRequest().body(errorResponse);
@@ -207,13 +207,13 @@ public class AuthController {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             HttpSession session = request.getSession(false);
 
-            System.out.println("🔍 CHECK-AUTH - User: " + authentication.getName());
-            System.out.println("🔍 CHECK-AUTH - Authenticated: " + authentication.isAuthenticated());
-            System.out.println("🔍 CHECK-AUTH - Session: " + (session != null ? session.getId() : "NO_SESSION"));
+            System.out.println(" CHECK-AUTH - User: " + authentication.getName());
+            System.out.println(" CHECK-AUTH - Authenticated: " + authentication.isAuthenticated());
+            System.out.println(" CHECK-AUTH - Session: " + (session != null ? session.getId() : "NO_SESSION"));
 
             if (authentication == null || !authentication.isAuthenticated() ||
                     authentication.getName().equals("anonymousUser")) {
-                System.out.println("🔒 UTILISATEUR NON AUTHENTIFIÉ");
+                System.out.println(" UTILISATEUR NON AUTHENTIFIÉ");
                 Map<String, String> errorResponse = new HashMap<>();
                 errorResponse.put("error", "Non authentifié");
                 return ResponseEntity.status(401).body(errorResponse);
@@ -227,7 +227,7 @@ public class AuthController {
                     );
 
             if (hasAccess) {
-                System.out.println("✅ UTILISATEUR AUTHENTIFIÉ : " + authentication.getName());
+                System.out.println(" UTILISATEUR AUTHENTIFIÉ : " + authentication.getName());
                 Map<String, Object> response = new HashMap<>();
                 response.put("authenticated", true);
                 response.put("message", "Utilisateur authentifié");
@@ -239,14 +239,14 @@ public class AuthController {
                 response.put("sessionActive", session != null);
                 return ResponseEntity.ok(response);
             } else {
-                System.out.println("❌ ACCÈS REFUSÉ - RÔLES INSUFFISANTS");
+                System.out.println("ACCÈS REFUSÉ - RÔLES INSUFFISANTS");
                 Map<String, String> errorResponse = new HashMap<>();
                 errorResponse.put("error", "Accès refusé - Rôles insuffisants");
                 return ResponseEntity.status(403).body(errorResponse);
             }
 
         } catch (Exception e) {
-            System.out.println("❌ ERREUR VÉRIFICATION AUTH : " + e.getMessage());
+            System.out.println(" ERREUR VÉRIFICATION AUTH : " + e.getMessage());
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Erreur de vérification: " + e.getMessage());
             return ResponseEntity.status(500).body(errorResponse);
@@ -266,11 +266,11 @@ public class AuthController {
         response.put("sessionId", session != null ? session.getId() : "NO_SESSION");
         response.put("authenticationClass", authentication.getClass().getSimpleName());
 
-        System.out.println("🐛 DEBUG SESSION:");
-        System.out.println("   👤 User: " + authentication.getName());
-        System.out.println("   🔐 Auth: " + authentication.isAuthenticated());
-        System.out.println("   🎯 Roles: " + authentication.getAuthorities());
-        System.out.println("   💾 Session: " + (session != null ? session.getId() : "NONE"));
+        System.out.println(" DEBUG SESSION:");
+        System.out.println(" User: " + authentication.getName());
+        System.out.println(" Auth: " + authentication.isAuthenticated());
+        System.out.println(" Roles: " + authentication.getAuthorities());
+        System.out.println(" Session: " + (session != null ? session.getId() : "NONE"));
 
         return ResponseEntity.ok(response);
     }
@@ -281,7 +281,7 @@ public class AuthController {
             HttpSession session = request.getSession(false);
             if (session != null) {
                 session.invalidate();
-                System.out.println("🚪 SESSION INVALIDÉE : " + session.getId());
+                System.out.println("SESSION INVALIDÉE : " + session.getId());
             }
 
             SecurityContextHolder.clearContext();
@@ -291,7 +291,7 @@ public class AuthController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            System.out.println("❌ ERREUR DÉCONNEXION : " + e.getMessage());
+            System.out.println(" ERREUR DÉCONNEXION : " + e.getMessage());
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Erreur lors de la déconnexion");
             return ResponseEntity.badRequest().body(errorResponse);
@@ -310,7 +310,7 @@ public class AuthController {
     public ResponseEntity<?> testEmail(@RequestBody Map<String, String> request) {
         try {
             String email = request.get("email");
-            System.out.println("🧪 TEST EMAIL : " + email);
+            System.out.println(" TEST EMAIL : " + email);
 
             emailService.sauvegarderEtEnvoyerCode(email);
 
@@ -322,7 +322,7 @@ public class AuthController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            System.out.println("❌ ERREUR TEST EMAIL : " + e.getMessage());
+            System.out.println("ERREUR TEST EMAIL : " + e.getMessage());
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Erreur test email: " + e.getMessage());
             return ResponseEntity.badRequest().body(errorResponse);

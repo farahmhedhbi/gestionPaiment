@@ -18,6 +18,6 @@ public interface VerificationCodeRepository extends JpaRepository<VerificationCo
     @Query("UPDATE VerificationCode v SET v.used = true WHERE v.email = ?1 AND v.used = false")
     void invalidatePreviousCodes(String email);
 
-    // Nouvelle méthode pour trouver le code actif le plus récent
+    //  méthode pour trouver le code actif le plus récent
     Optional<VerificationCode> findTopByEmailAndUsedFalseOrderByCreatedAtDesc(String email);
 }

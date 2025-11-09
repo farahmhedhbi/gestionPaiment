@@ -119,10 +119,10 @@ export default function Login() {
             });
             
             if (authCheck.ok) {
-              console.log('✅ Authentification confirmée, redirection vers /dashboard');
+              console.log(' Authentification confirmée, redirection vers /dashboard');
               router.push('/dashboard');
             } else {
-              console.log('❌ Authentification échouée, redirection vers /login');
+              console.log(' Authentification échouée, redirection vers /login');
               setError('Erreur d\'authentification, veuillez réessayer');
               setStep('login');
             }
@@ -201,7 +201,7 @@ export default function Login() {
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 overflow-hidden">
       
-      {/* 💸 Fond animé */}
+      {/*  Fond animé */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {floatingEmojis.map((emoji) => (
           <span

@@ -14,20 +14,20 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Créer les rôles s'ils n'existent pas
+        // Créer les rôles
         if (roleRepository.findByName(Role.ERole.ROLE_ADMIN).isEmpty()) {
             roleRepository.save(new Role(Role.ERole.ROLE_ADMIN));
-            System.out.println("✅ Role ADMIN créé");
+            System.out.println("Role ADMIN créé");
         }
         if (roleRepository.findByName(Role.ERole.ROLE_FORMATEUR).isEmpty()) {
             roleRepository.save(new Role(Role.ERole.ROLE_FORMATEUR));
-            System.out.println("✅ Role FORMATEUR créé");
+            System.out.println("Role FORMATEUR créé");
         }
         if (roleRepository.findByName(Role.ERole.ROLE_COORDINATEUR).isEmpty()) {
             roleRepository.save(new Role(Role.ERole.ROLE_COORDINATEUR));
-            System.out.println("✅ Role COORDINATEUR créé");
+            System.out.println("Role COORDINATEUR créé");
         }
 
-        System.out.println("✅ Tous les rôles sont initialisés!");
+        System.out.println("Tous les rôles sont initialisés!");
     }
 }

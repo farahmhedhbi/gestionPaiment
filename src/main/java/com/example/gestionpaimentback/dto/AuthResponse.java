@@ -10,7 +10,7 @@ public class AuthResponse {
     private String lastName;
     private List<String> roles;
 
-    // Constructeurs
+
     public AuthResponse() {}
 
     public AuthResponse(String message, Long userId, String email, String firstName, String lastName, List<String> roles) {
@@ -22,7 +22,7 @@ public class AuthResponse {
         this.roles = roles;
     }
 
-    // Getters et Setters
+
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
 
