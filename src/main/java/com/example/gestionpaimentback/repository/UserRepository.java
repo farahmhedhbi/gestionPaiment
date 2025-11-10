@@ -16,9 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM User u JOIN u.roles r WHERE r = :role")
     List<User> findUsersByRole(Role role);
-
     boolean existsById(Long id);
-
     // Nouvelle méthode pour trouver par statut
     List<User> findByStatus(Integer status);
+
 }
