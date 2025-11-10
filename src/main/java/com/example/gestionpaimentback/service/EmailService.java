@@ -1,7 +1,9 @@
 package com.example.gestionpaimentback.service;
 
 import com.example.gestionpaimentback.entity.VerificationCode;
+import com.example.gestionpaimentback.entity.User;
 import com.example.gestionpaimentback.repository.VerificationCodeRepository;
+import com.example.gestionpaimentback.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -14,6 +16,9 @@ public class EmailService {
 
     @Autowired
     private VerificationCodeRepository verificationCodeRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private JavaMailSender emailSender;
@@ -42,21 +47,37 @@ public class EmailService {
             emailSender.send(message);
 
             // 3. Confirmation
-            System.out.println(" EMAIL ENVOYÉ : " + emailUtilisateur);
-            System.out.println(" CODE : " + code);
+            System.out.println("✅ EMAIL ENVOYÉ : " + emailUtilisateur);
+            System.out.println("🔑 CODE : " + code);
 
         } catch (Exception e) {
             // Si erreur, on montre le code dans la console
-            System.out.println(" Email non envoyé, mais CODE DISPONIBLE :");
-            System.out.println(" Pour : " + emailUtilisateur);
-            System.out.println(" Code : " + code);
-            System.out.println(" Copie ce code pour te connecter !");
+            System.out.println("❌ Email non envoyé, mais CODE DISPONIBLE :");
+            System.out.println("📧 Pour : " + emailUtilisateur);
+            System.out.println("🔑 Code : " + code);
+            System.out.println("📋 Copie ce code pour te connecter !");
         }
     }
 
-    // Sauvegarder et envoyer le code
+    // Vérifier si l'utilisateur a déjà reçu un code (première connexion)
+    public boolean isPremiereConnexion(String email) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            return user.getStatus() == 0; // status 0 = première connexion
+        }
+        return false;
+    }
+
+    // Sauvegarder et envoyer le code UNIQUEMENT pour la première connexion
     public void sauvegarderEtEnvoyerCode(String email) {
         try {
+            // Vérifier si c'est la première connexion
+            if (!isPremiereConnexion(email)) {
+                System.out.println("ℹ️ Utilisateur déjà vérifié, pas d'envoi de code");
+                return;
+            }
+
             // 1. Invalider anciens codes
             verificationCodeRepository.invalidatePreviousCodes(email);
 
@@ -70,13 +91,15 @@ public class EmailService {
             // 4. Envoyer par email
             envoyerCode(email, code);
 
+            System.out.println("✅ Code envoyé pour première connexion : " + email);
+
         } catch (Exception e) {
-            System.out.println("❌ Erreur : " + e.getMessage());
+            System.out.println("❌ Erreur envoi code : " + e.getMessage());
         }
     }
 
-    // Vérifier le code
-    public boolean verifierCode(String email, String code) {
+    // Vérifier le code et activer l'utilisateur
+    public boolean verifierCodeEtActiver(String email, String code) {
         try {
             Optional<VerificationCode> verificationCode =
                     verificationCodeRepository.findByEmailAndCodeAndUsedFalse(email, code);
@@ -88,9 +111,19 @@ public class EmailService {
                     return false;
                 }
 
-                // Marquer comme utilisé
+                // Marquer le code comme utilisé
                 vc.setUsed(true);
                 verificationCodeRepository.save(vc);
+
+                // Activer l'utilisateur (changer status de 0 à 1)
+                Optional<User> userOptional = userRepository.findByEmail(email);
+                if (userOptional.isPresent()) {
+                    User user = userOptional.get();
+                    user.setStatus(1); // Activer l'utilisateur
+                    userRepository.save(user);
+                    System.out.println("✅ Utilisateur activé : " + email);
+                }
+
                 return true;
             }
 

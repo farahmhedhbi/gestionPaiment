@@ -1,6 +1,5 @@
 package com.example.gestionpaimentback.controller;
 
-
 import com.example.gestionpaimentback.entity.User;
 import com.example.gestionpaimentback.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +17,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/user")
 public class UserProfileController {
+
     @Autowired
     private UserRepository userRepository;
 
@@ -42,8 +42,9 @@ public class UserProfileController {
                 profileData.put("cin", user.getCin());
                 profileData.put("rib", user.getRib());
                 profileData.put("bankName", user.getBankName());
-                profileData.put("accountNumber", user.getAccountNumber());
+                profileData.put("fonctionnalite", user.getFonctionnalite()); // NOUVEAU
                 profileData.put("createdAt", user.getCreatedAt());
+                profileData.put("status", user.getStatus());
 
                 return ResponseEntity.ok(profileData);
             } else {
@@ -78,8 +79,10 @@ public class UserProfileController {
                 if (updateData.containsKey("bankName")) {
                     user.setBankName(updateData.get("bankName"));
                 }
-                if (updateData.containsKey("accountNumber")) {
-                    user.setAccountNumber(updateData.get("accountNumber"));
+
+                // NOUVEAU: Mettre à jour la fonctionnalité
+                if (updateData.containsKey("fonctionnalite")) {
+                    user.setFonctionnalite(updateData.get("fonctionnalite"));
                 }
 
                 userRepository.save(user);
@@ -87,12 +90,32 @@ public class UserProfileController {
                 Map<String, Object> response = new HashMap<>();
                 response.put("message", "Profil mis à jour avec succès");
                 response.put("user", user.getEmail());
+                response.put("fonctionnalite", user.getFonctionnalite());
 
                 return ResponseEntity.ok(response);
             } else {
                 return ResponseEntity.status(404).body("Utilisateur non trouvé");
             }
 
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erreur serveur: " + e.getMessage());
+        }
+    }
+
+    // NOUVELLE METHODE: Récupérer les fonctionnalités disponibles
+    @GetMapping("/fonctionnalites")
+    @PreAuthorize("hasAnyRole('ADMIN', 'COORDINATEUR')")
+    public ResponseEntity<?> getFonctionnalites() {
+        try {
+            Map<String, String> fonctionnalites = new HashMap<>();
+            fonctionnalites.put("GESTION_FORMATEURS", "Gestion des formateurs");
+            fonctionnalites.put("GESTION_PAIEMENTS", "Gestion des paiements");
+            fonctionnalites.put("SUIVI_FORMATIONS", "Suivi des formations");
+            fonctionnalites.put("RAPPORTS_STATISTIQUES", "Rapports et statistiques");
+            fonctionnalites.put("GESTION_UTILISATEURS", "Gestion des utilisateurs");
+            fonctionnalites.put("ADMINISTRATION_SYSTEME", "Administration du système");
+
+            return ResponseEntity.ok(fonctionnalites);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erreur serveur: " + e.getMessage());
         }

@@ -3,6 +3,7 @@ package com.example.gestionpaimentback.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -39,22 +40,29 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "status", nullable = false)
+    private Integer status = 0;
 
-    @Size(max = 20)
-    @Column(name = "cin")
+    @Size(min = 8, max = 8, message = "Le CIN doit contenir exactement 8 chiffres")
+    @Pattern(regexp = "^[0-9]{8}$", message = "Le CIN doit contenir uniquement des chiffres")
+    @Column(name = "cin", length = 8)
     private String cin;
 
-    @Size(max = 50)
-    @Column(name = "rib")
+    @Size(min = 20, max = 20, message = "Le RIB doit contenir exactement 20 chiffres")
+    @Pattern(regexp = "^[0-9]{20}$", message = "Le RIB doit contenir uniquement des chiffres")
+    @Column(name = "rib", length = 20)
     private String rib;
 
     @Size(max = 100)
     @Column(name = "bank_name")
     private String bankName;
 
-    @Size(max = 50)
-    @Column(name = "account_number")
-    private String accountNumber;
+
+
+    // NOUVEAU CHAMP FONCTIONNALITE
+    @Size(max = 100)
+    @Column(name = "fonctionnalite")
+    private String fonctionnalite;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
@@ -71,6 +79,7 @@ public class User {
         this.email = email;
         this.password = password;
         this.createdAt = LocalDateTime.now();
+        this.status = 0;
     }
 
     // Getters et Setters
@@ -92,7 +101,9 @@ public class User {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    // NOUVEAUX GETTERS/SETTERS
+    public Integer getStatus() { return status; }
+    public void setStatus(Integer status) { this.status = status; }
+
     public String getCin() { return cin; }
     public void setCin(String cin) { this.cin = cin; }
 
@@ -102,8 +113,10 @@ public class User {
     public String getBankName() { return bankName; }
     public void setBankName(String bankName) { this.bankName = bankName; }
 
-    public String getAccountNumber() { return accountNumber; }
-    public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
+
+    // NOUVEAU GETTER/SETTER FONCTIONNALITE
+    public String getFonctionnalite() { return fonctionnalite; }
+    public void setFonctionnalite(String fonctionnalite) { this.fonctionnalite = fonctionnalite; }
 
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }

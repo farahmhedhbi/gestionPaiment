@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, FormEvent, useEffect } from 'react'
-import { FaEnvelope, FaLock, FaMoneyBillWave, FaKey, FaArrowLeft } from 'react-icons/fa'
+import { FaEnvelope, FaLock, FaMoneyBillWave, FaKey, FaArrowLeft, FaCheck } from 'react-icons/fa'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -28,7 +28,7 @@ export default function Login() {
     setFloatingEmojis(emojis)
   }, [])
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -37,38 +37,41 @@ export default function Login() {
     try {
       const response = await fetch('http://localhost:8080/api/auth/signin', {
         method: 'POST',
-        credentials: 'include', // Important pour les cookies
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
       })
 
-      // Gérer la réponse (JSON ou texte)
-      let responseData;
-      const responseText = await response.text();
+      let responseData
+      const responseText = await response.text()
       
       try {
-        responseData = responseText ? JSON.parse(responseText) : {};
+        responseData = responseText ? JSON.parse(responseText) : {}
       } catch (parseError) {
-        responseData = { error: responseText };
+        responseData = { error: responseText }
       }
 
       if (response.ok) {
-        setSuccess('Code de vérification envoyé à votre email!')
-        setStep('verification')
+        if (responseData.firstLogin) {
+          // Première connexion - besoin de code
+          setSuccess('Code de vérification envoyé à votre email pour première connexion!')
+          setStep('verification')
+        } else {
+          // Utilisateur déjà vérifié - connexion directe
+          setSuccess('Connexion réussie! Redirection...')
+          setTimeout(() => {
+            router.push('/dashboard')
+          }, 1000)
+        }
       } else {
-        // Extraire le message d'erreur
-        const errorMessage = 
-          responseData.error || 
-          responseData.message || 
-          responseText || 
-          'Erreur de connexion';
+        const errorMessage = responseData.error || responseData.message || responseText || 'Erreur de connexion'
         
-        // Nettoyer le message
-        let cleanErrorMessage = errorMessage;
+        // Nettoyer le message d'erreur
+        let cleanErrorMessage = errorMessage
         if (cleanErrorMessage.startsWith('Error: ')) {
-          cleanErrorMessage = cleanErrorMessage.substring(7);
+          cleanErrorMessage = cleanErrorMessage.substring(7)
         }
         
         setError(cleanErrorMessage)
@@ -81,7 +84,7 @@ export default function Login() {
     }
   }
 
-  const handleVerification = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleVerification = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -89,21 +92,20 @@ export default function Login() {
     try {
       const response = await fetch('http://localhost:8080/api/auth/verify-code', {
         method: 'POST',
-        credentials: 'include', // Important pour les cookies
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, code }),
       })
 
-      // Gérer la réponse (JSON ou texte)
-      let responseData;
-      const responseText = await response.text();
+      let responseData
+      const responseText = await response.text()
       
       try {
-        responseData = responseText ? JSON.parse(responseText) : {};
+        responseData = responseText ? JSON.parse(responseText) : {}
       } catch (parseError) {
-        responseData = { error: responseText };
+        responseData = { error: responseText }
       }
 
       if (response.ok) {
@@ -112,33 +114,28 @@ export default function Login() {
         // Vérifier que l'utilisateur est bien authentifié avant la redirection
         setTimeout(async () => {
           try {
-            // Vérifier l'authentification avant la redirection
             const authCheck = await fetch('http://localhost:8080/api/auth/check-auth', {
               method: 'GET',
               credentials: 'include',
-            });
+            })
             
             if (authCheck.ok) {
-              console.log(' Authentification confirmée, redirection vers /dashboard');
-              router.push('/dashboard');
+              console.log('✅ Authentification confirmée, redirection vers /dashboard')
+              router.push('/dashboard')
             } else {
-              console.log(' Authentification échouée, redirection vers /login');
-              setError('Erreur d\'authentification, veuillez réessayer');
-              setStep('login');
+              console.log('❌ Authentification échouée, redirection vers /login')
+              setError('Erreur d\'authentification, veuillez réessayer')
+              setStep('login')
             }
           } catch (authError) {
-            console.error('Erreur vérification auth:', authError);
-            setError('Erreur de vérification d\'authentification');
-            setStep('login');
+            console.error('Erreur vérification auth:', authError)
+            setError('Erreur de vérification d\'authentification')
+            setStep('login')
           }
-        }, 1500);
+        }, 1500)
         
       } else {
-        const errorMessage = 
-          responseData.error || 
-          responseData.message || 
-          responseText || 
-          'Code invalide';
+        const errorMessage = responseData.error || responseData.message || responseText || 'Code invalide'
         setError(errorMessage)
       }
     } catch (err: any) {
@@ -163,24 +160,19 @@ export default function Login() {
         body: JSON.stringify({ email }),
       })
 
-      // Gérer la réponse (JSON ou texte)
-      let responseData;
-      const responseText = await response.text();
+      let responseData
+      const responseText = await response.text()
       
       try {
-        responseData = responseText ? JSON.parse(responseText) : {};
+        responseData = responseText ? JSON.parse(responseText) : {}
       } catch (parseError) {
-        responseData = { error: responseText };
+        responseData = { error: responseText }
       }
 
       if (response.ok) {
-        setSuccess('Nouveau code envoyé!')
+        setSuccess('Nouveau code envoyé! Vérifiez votre email.')
       } else {
-        const errorMessage = 
-          responseData.error || 
-          responseData.message || 
-          responseText || 
-          'Erreur lors de l\'envoi du code';
+        const errorMessage = responseData.error || responseData.message || responseText || 'Erreur lors de l\'envoi du code'
         setError(errorMessage)
       }
     } catch (err: any) {
@@ -201,7 +193,7 @@ export default function Login() {
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 overflow-hidden">
       
-      {/*  Fond animé */}
+      {/* Fond animé */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {floatingEmojis.map((emoji) => (
           <span
@@ -247,7 +239,7 @@ export default function Login() {
                 placeholder="Adresse email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-3 pl-10 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                className="w-full p-3 pl-10 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-300"
                 required
                 disabled={loading}
               />
@@ -261,34 +253,36 @@ export default function Login() {
                 placeholder="Mot de passe"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3 pl-10 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                className="w-full p-3 pl-10 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-300"
                 required
                 disabled={loading}
               />
             </div>
 
+            {/* Messages d'erreur/succès */}
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 animate-pulse">
                 <p className="text-red-400 text-sm text-center">{error}</p>
               </div>
             )}
+            
             {success && (
               <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
                 <p className="text-green-400 text-sm text-center">{success}</p>
               </div>
             )}
 
-            {/* Bouton */}
+            {/* Bouton de connexion */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 p-3 rounded-lg font-semibold text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-transform duration-300 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 p-3 rounded-lg font-semibold text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed group"
             >
               <div className="flex items-center justify-center gap-2">
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <FaMoneyBillWave className="animate-bounce" />
+                  <FaCheck className="group-hover:scale-110 transition-transform" />
                 )}
                 {loading ? 'Connexion...' : 'Se connecter'}
               </div>
@@ -300,16 +294,19 @@ export default function Login() {
             <button
               type="button"
               onClick={handleBackToLogin}
-              className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors mb-4"
+              className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors mb-4 group"
             >
-              <FaArrowLeft className="text-sm" />
+              <FaArrowLeft className="text-sm group-hover:-translate-x-1 transition-transform" />
               Retour à la connexion
             </button>
 
             {/* Message d'information */}
             <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-4 text-sm">
-              <p className="text-cyan-300">
-                Un code de vérification a été envoyé à: <strong>{email}</strong>
+              <p className="text-cyan-300 font-medium">
+                Première connexion - Vérification requise
+              </p>
+              <p className="text-cyan-300 text-xs mt-1">
+                Un code a été envoyé à: <strong>{email}</strong>
               </p>
               <p className="text-cyan-300 text-xs mt-1">
                 Vérifiez votre boîte email et vos spams
@@ -321,21 +318,38 @@ export default function Login() {
               <FaKey className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400" />
               <input
                 type="text"
-                placeholder="Code de vérification (6 chiffres)"
+                placeholder="Code à 6 chiffres"
                 value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                className="w-full p-3 pl-10 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-center text-xl tracking-widest"
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+                  setCode(value)
+                }}
+                className="w-full p-3 pl-10 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-center text-xl tracking-widest font-mono transition-all duration-300"
                 maxLength={6}
                 required
                 disabled={loading}
               />
             </div>
 
+            {/* Indicateur de longueur du code */}
+            <div className="flex justify-center space-x-1">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  key={index}
+                  className={`w-3 h-1 rounded-full transition-all duration-300 ${
+                    index < code.length ? 'bg-cyan-400' : 'bg-white/20'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Messages d'erreur/succès */}
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 animate-pulse">
                 <p className="text-red-400 text-sm text-center">{error}</p>
               </div>
             )}
+            
             {success && (
               <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
                 <p className="text-green-400 text-sm text-center">{success}</p>
@@ -346,26 +360,31 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading || code.length !== 6}
-              className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 p-3 rounded-lg font-semibold text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-transform duration-300 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 p-3 rounded-lg font-semibold text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed group"
             >
               <div className="flex items-center justify-center gap-2">
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <FaKey />
+                  <FaKey className="group-hover:scale-110 transition-transform" />
                 )}
                 {loading ? 'Vérification...' : 'Vérifier le code'}
               </div>
             </button>
 
             {/* Renvoyer le code */}
-            <div className="text-center">
+            <div className="text-center pt-2">
               <button
                 type="button"
                 onClick={handleResendCode}
                 disabled={loading}
-                className="text-cyan-400 hover:text-cyan-300 text-sm transition-colors disabled:opacity-50"
+                className="text-cyan-400 hover:text-cyan-300 text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mx-auto"
               >
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <FaEnvelope className="text-xs" />
+                )}
                 {loading ? 'Envoi...' : 'Renvoyer le code'}
               </button>
             </div>
@@ -375,24 +394,32 @@ export default function Login() {
         {step === 'login' && (
           <p className="text-center text-white/70 mt-6">
             Pas de compte ?{' '}
-            <Link href="/register" className="text-cyan-400 hover:underline">
+            <Link 
+              href="/register" 
+              className="text-cyan-400 hover:text-cyan-300 underline transition-colors"
+            >
               Inscrivez-vous
             </Link>
           </p>
         )}
       </div>
 
-      {/* Animations */}
+      {/* Styles d'animation */}
       <style jsx>{`
         @keyframes float {
           0% {
             transform: translateY(0) rotate(0deg);
+            opacity: 0;
           }
-          50% {
-            transform: translateY(100vh) rotate(360deg);
+          10% {
+            opacity: 0.3;
+          }
+          90% {
+            opacity: 0.3;
           }
           100% {
-            transform: translateY(-10vh) rotate(720deg);
+            transform: translateY(100vh) rotate(360deg);
+            opacity: 0;
           }
         }
         .animate-float {
