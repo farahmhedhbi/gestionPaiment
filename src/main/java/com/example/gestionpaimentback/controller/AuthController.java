@@ -45,6 +45,14 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    PasswordEncoder encoder;
+
+    @PostMapping("/generate")
+    public String generate() {
+        return encoder.encode("admin123");
+    }
+
 
     @PostMapping("/signin")
     public ResponseEntity<?> initiateLogin(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {

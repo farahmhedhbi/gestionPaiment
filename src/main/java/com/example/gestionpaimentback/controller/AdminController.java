@@ -16,6 +16,11 @@ public class AdminController {
     public AdminController(AdminService adminService) {
         this.adminService = adminService;
     }
+    @GetMapping("/users")
+    public List<User> getAllUsers() {
+        return adminService.getAllUsers();
+    }
+
 
     @GetMapping("/formateurs")
     public List<User> getFormateurs() {
@@ -27,9 +32,10 @@ public class AdminController {
         return adminService.getCoordinateurs();
     }
 
-    @DeleteMapping("/user/{id}")
+    @DeleteMapping("/users/{id}")
     public String deleteUser(@PathVariable Long id) {
         adminService.deleteUser(id);
         return "Utilisateur supprimé avec succès";
     }
+
 }
