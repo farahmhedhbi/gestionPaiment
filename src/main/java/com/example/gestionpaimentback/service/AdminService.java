@@ -18,6 +18,11 @@ public class AdminService {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
     }
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+
 
     public List<User> getFormateurs() {
         Role formateurRole = roleRepository.findByName(Role.ERole.ROLE_FORMATEUR)
