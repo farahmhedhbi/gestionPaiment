@@ -4,6 +4,7 @@ import com.example.gestionpaimentback.entity.Role;
 import com.example.gestionpaimentback.entity.User;
 import com.example.gestionpaimentback.repository.RoleRepository;
 import com.example.gestionpaimentback.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,10 +39,18 @@ public class AdminService {
         return userRepository.findUsersByRole(coordRole);
     }
 
+    @Transactional
     public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new RuntimeException("Utilisateur introuvable");
-        }
-        userRepository.deleteById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'ID: " + id));
+
+        // Vider les collections avant suppression
+        user.getRoles().clear();
+
+        // Sauvegarder pour vider les relations
+        userRepository.save(user);
+
+        // Maintenant supprimer l'utilisateur
+        userRepository.delete(user);
     }
 }

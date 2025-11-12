@@ -20,4 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Nouvelle méthode pour trouver par statut
     List<User> findByStatus(Integer status);
 
+
+
 }
