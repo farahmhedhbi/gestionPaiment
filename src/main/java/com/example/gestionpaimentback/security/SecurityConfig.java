@@ -2,6 +2,7 @@ package com.example.gestionpaimentback.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -44,33 +45,54 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
         http
-                // Configuration CORS
+                // CORS OK
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                // Désactiver CSRF (pour les APIs REST)
+                // API REST → pas besoin de CSRF
                 .csrf(csrf -> csrf.disable())
 
-                // Configuration des autorisations
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/home/**").authenticated()
-                        .requestMatchers("/api/test/public").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // 🔓 Auth routes
+                        .requestMatchers("/api/auth/signin").permitAll()
+                        .requestMatchers("/api/auth/signup").permitAll()
+                        .requestMatchers("/api/auth/verify-code").permitAll()
+                        .requestMatchers("/api/auth/resend-code").permitAll()
+                        .requestMatchers("/api/auth/check-auth").permitAll()
+                        .requestMatchers("/api/auth/logout").permitAll()
+
                         .requestMatchers("/h2-console/**").permitAll()
+
+                        // 🔒 Routes protégées
+                        .requestMatchers("/api/home/**").authenticated()
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/formateurs/**").hasAnyRole("FORMATEUR", "ADMIN")
+                        .requestMatchers("/api/coordinateurs/**").hasAnyRole("COORDINATEUR", "ADMIN")
+
                         .anyRequest().authenticated()
                 )
 
-                // Configuration de la session
+
+                // ➤ Gestion des sessions (tu veux garder la logique session)
                 .sessionManagement(session -> session
                         .maximumSessions(1)
                         .maxSessionsPreventsLogin(false)
                 )
 
-                // Désactiver le form login par défaut
+                // Pas de formulaire login Spring (tu utilises ton API)
                 .formLogin(form -> form.disable())
 
-                // Désactiver l'authentification basic par défaut
-                .httpBasic(basic -> basic.disable());
+                // Pas de basic auth
+                .httpBasic(basic -> basic.disable())
+
+                // Important pour utiliser HttpSession
+                .securityContext(context ->
+                        context
+                                .securityContextRepository(new HttpSessionSecurityContextRepository())
+                );
 
         return http.build();
     }
@@ -78,14 +100,23 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+
         configuration.setAllowedOriginPatterns(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true); // IMPORTANT pour les cookies de session
+
+        // IMPORTANT → pour envoyer JSESSIONID vers Next.js
+        configuration.setAllowCredentials(true);
+        configuration.addAllowedMethod("*");
+        configuration.addAllowedHeader("*");
+        configuration.addAllowedOriginPattern("*");
+
+
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 

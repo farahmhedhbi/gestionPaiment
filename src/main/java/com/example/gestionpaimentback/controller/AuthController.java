@@ -254,22 +254,41 @@ public class AuthController {
 
     @GetMapping("/check-auth")
     public ResponseEntity<?> checkAuthentication(HttpServletRequest request) {
+        Map<String, Object> response = new HashMap<>();
+
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             HttpSession session = request.getSession(false);
 
-            System.out.println("🔍 CHECK-AUTH - User: " + authentication.getName());
-            System.out.println("🔍 CHECK-AUTH - Authenticated: " + authentication.isAuthenticated());
-            System.out.println("🔍 CHECK-AUTH - Session: " + (session != null ? session.getId() : "NO_SESSION"));
+            System.out.println("🔍 CHECK-AUTH - Authentification: " + authentication);
 
-            if (authentication == null || !authentication.isAuthenticated() ||
-                    authentication.getName().equals("anonymousUser")) {
-                System.out.println("❌ UTILISATEUR NON AUTHENTIFIÉ");
-                Map<String, String> errorResponse = new HashMap<>();
-                errorResponse.put("error", "Non authentifié");
-                return ResponseEntity.status(401).body(errorResponse);
+            // Vérification basique
+            if (authentication == null || !authentication.isAuthenticated()
+                    || authentication.getName().equals("anonymousUser")) {
+
+                System.out.println("❌ Utilisateur NON AUTHENTIFIÉ");
+
+                response.put("authenticated", false);
+                response.put("message", "Non authentifié");
+                response.put("sessionActive", session != null);
+                return ResponseEntity.status(401).body(response);
             }
 
+            String email = authentication.getName();
+
+            // ➤ Récupération de l'utilisateur connecté
+            User user = userRepository.findByEmail(email).orElse(null);
+
+            if (user == null) {
+                System.out.println("❌ UTILISATEUR INTROUVABLE EN BD : " + email);
+
+                response.put("authenticated", false);
+                response.put("message", "Utilisateur introuvable");
+                response.put("sessionActive", session != null);
+                return ResponseEntity.status(404).body(response);
+            }
+
+            // Vérification des rôles
             boolean hasAccess = authentication.getAuthorities().stream()
                     .anyMatch(auth ->
                             auth.getAuthority().equals("ROLE_ADMIN") ||
@@ -277,30 +296,42 @@ public class AuthController {
                                     auth.getAuthority().equals("ROLE_COORDINATEUR")
                     );
 
-            if (hasAccess) {
-                System.out.println("✅ UTILISATEUR AUTHENTIFIÉ : " + authentication.getName());
-                Map<String, Object> response = new HashMap<>();
-                response.put("authenticated", true);
-                response.put("message", "Utilisateur authentifié");
-                response.put("username", authentication.getName());
-                response.put("roles", authentication.getAuthorities()
-                        .stream()
-                        .map(auth -> auth.getAuthority())
-                        .collect(Collectors.toList()));
-                response.put("sessionActive", session != null);
-                return ResponseEntity.ok(response);
-            } else {
+            if (!hasAccess) {
                 System.out.println("🚫 ACCÈS REFUSÉ - RÔLES INSUFFISANTS");
-                Map<String, String> errorResponse = new HashMap<>();
-                errorResponse.put("error", "Accès refusé - Rôles insuffisants");
-                return ResponseEntity.status(403).body(errorResponse);
+
+                response.put("authenticated", false);
+                response.put("message", "Accès refusé - Rôles insuffisants");
+                response.put("roles", authentication.getAuthorities().stream()
+                        .map(a -> a.getAuthority())
+                        .collect(Collectors.toList()));
+                return ResponseEntity.status(403).body(response);
             }
 
+            // ➤ Réponse finale avec ID du user connecté (important pour le dashboard)
+            System.out.println("✅ UTILISATEUR AUTHENTIFIÉ : " + email);
+
+            response.put("authenticated", true);
+            response.put("message", "Utilisateur authentifié");
+            response.put("sessionActive", session != null);
+
+            // ➤ Ajout important
+            response.put("id", user.getId());               // 🔥 indispensable
+            response.put("email", user.getEmail());
+            response.put("username", user.getEmail());      // pour compatibilité
+            response.put("roles", authentication.getAuthorities()
+                    .stream()
+                    .map(auth -> auth.getAuthority())
+                    .collect(Collectors.toList()));
+
+            return ResponseEntity.ok(response);
+
         } catch (Exception e) {
-            System.out.println("❌ ERREUR VÉRIFICATION AUTH : " + e.getMessage());
-            Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Erreur de vérification: " + e.getMessage());
-            return ResponseEntity.status(500).body(errorResponse);
+            System.out.println("❌ ERREUR CHECK-AUTH : " + e.getMessage());
+
+            response.put("authenticated", false);
+            response.put("message", "Erreur serveur");
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(500).body(response);
         }
     }
 

@@ -10,9 +10,37 @@ import { apiService } from '@/app/services/api';
 import { User } from '@/app/types';
 import { ProfileMenu } from '@/app/components/features/dashboard/ProfileMenu';
 import { EditProfileForm } from '@/app/components/features/dashboard/EditProfileForm';
+import { useRouter } from "next/navigation";   
 
 export default function DashboardPage() {
+
+  const router = useRouter();
   const { user: authUser, logout } = useAuth();
+
+  const [authChecking, setAuthChecking] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await apiService.checkAuth();
+
+        if (!res.authenticated) {
+          return router.push("/login");
+        }
+
+        setAuthChecking(false);
+
+      } catch (e) {
+        router.push("/login");
+      }
+    };
+
+    checkAuth();
+  }, []);
+  // ===============================
+  // TON ANCIEN CODE RESTE ICI NORMAL
+  // ===============================
+
   const [userData, setUserData] = useState<User>({
     id: 0,
     firstName: '',
@@ -24,6 +52,7 @@ export default function DashboardPage() {
     bankName: '',
     fonctionnalite: ''
   });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
@@ -33,8 +62,8 @@ export default function DashboardPage() {
   const [nameModified, setNameModified] = useState(false);
   const [fonctionnalites, setFonctionnalites] = useState<{[key: string]: string}>({});
 
-  const isCoordinateur = authUser?.roles?.some((role: string) => 
-    role.includes('COORDINATEUR') || role.includes('ADMIN')
+  const isCoordinateur = authUser?.roles?.some(
+    (role: string) => role.includes("COORDINATEUR") || role.includes("ADMIN")
   );
 
   useEffect(() => {
@@ -42,78 +71,52 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-  if (isEditing) {
-    setShowProfileMenu(false);
-  }
-}, [isEditing]);
+    if (isEditing) setShowProfileMenu(false);
+  }, [isEditing]);
 
   const loadUserData = async () => {
-  try {
-    setError('');
-    setLoading(true);
-    
-    console.log('🔄 Début du chargement des données...');
-    
-    // 1. Charger le profil utilisateur
-    const profileData = await apiService.getUserProfile();
-    console.log('✅ Profil utilisateur chargé:', profileData);
-    
-    // 2. Déterminer si c'est un coordinateur basé sur les données réelles
-    const userIsCoordinateur = profileData.roles?.some((role: string) => 
-      role.includes('COORDINATEUR') || role.includes('ADMIN')
-    );
-    
-    console.log('👤 Utilisateur coordinateur?:', userIsCoordinateur);
-    
-    // 3. Charger les fonctionnalités seulement pour les coordinateurs
-    let fonctionnalitesData = {};
-    if (userIsCoordinateur) {
-      try {
-        console.log('📋 Chargement des fonctionnalités...');
-        fonctionnalitesData = await apiService.getFonctionnalites();
-        console.log('✅ Fonctionnalités reçues:', fonctionnalitesData);
-        
-        // Vérifier si les données sont valides
-        if (!fonctionnalitesData || typeof fonctionnalitesData !== 'object' || Object.keys(fonctionnalitesData).length === 0) {
-          console.warn('⚠️ Données de fonctionnalités invalides ou vides');
+    try {
+      setError('');
+      setLoading(true);
+
+      const profileData = await apiService.getUserProfile();
+
+      const userIsCoordinateur = profileData.roles?.some(
+        (role: string) => role.includes("COORDINATEUR") || role.includes("ADMIN")
+      );
+
+      let fonctionnalitesData = {};
+      if (userIsCoordinateur) {
+        try {
+          fonctionnalitesData = await apiService.getFonctionnalites();
+          if (!fonctionnalitesData || typeof fonctionnalitesData !== "object") {
+            fonctionnalitesData = getFonctionnalitesParDefaut();
+          }
+        } catch {
           fonctionnalitesData = getFonctionnalitesParDefaut();
         }
-      } catch (foncError: any) {
-        console.warn('⚠️ Erreur non critique - fonctionnalités:', foncError.message);
-        fonctionnalitesData = getFonctionnalitesParDefaut();
       }
-    } else {
-      console.log('ℹ️ Utilisateur non coordinateur, skip chargement fonctionnalités');
-    }
-    
-    // 4. Mettre à jour l'état
-    setUserData(profileData);
-    setFonctionnalites(fonctionnalitesData);
-    
-    // 5. Gérer les états de modification
-    if (profileData.cin) setCinModified(true);
-    if (profileData.firstName && profileData.lastName) setNameModified(true);
-    
-    console.log('🎉 Chargement des données terminé avec succès');
-    
-  } catch (error: any) {
-    console.error('❌ Erreur critique lors du chargement:', error);
-    setError(`Erreur de chargement: ${error.message || 'Problème de connexion'}`);
-  } finally {
-    setLoading(false);
-  }
-};
 
-// Fonction helper pour les fonctionnalités par défaut
-const getFonctionnalitesParDefaut = (): {[key: string]: string} => {
-  return {
+      setUserData(profileData);
+      setFonctionnalites(fonctionnalitesData);
+
+      if (profileData.cin) setCinModified(true);
+      if (profileData.firstName && profileData.lastName) setNameModified(true);
+
+    } catch (error: any) {
+      setError(`Erreur de chargement: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getFonctionnalitesParDefaut = () => ({
     'GESTION_FORMATEURS': 'Gestion des formateurs',
-    'SUIVI_FORMATIONS': 'Suivi des formations', 
+    'SUIVI_FORMATIONS': 'Suivi des formations',
     'VALIDATION_DOSSIERS': 'Validation des dossiers',
     'RAPPORTS_STATISTIQUES': 'Rapports statistiques',
-    'GESTION_UTILISATEURS': 'Gestion des utilisateurs'
-  };
-};
+    'GESTION_UTILISATEURS': 'Gestion des utilisateurs',
+  });
 
   const handleSaveProfile = async (updatedData: User) => {
     try {
@@ -121,9 +124,8 @@ const getFonctionnalitesParDefaut = (): {[key: string]: string} => {
       setUserData(updatedData);
       setCinModified(true);
       setNameModified(true);
-      setSuccess('Profil mis à jour avec succès!');
+      setSuccess("Profil mis à jour avec succès !");
       setIsEditing(false);
-      
       setTimeout(() => setSuccess(''), 3000);
     } catch (error: any) {
       setError(error.message);
@@ -133,6 +135,15 @@ const getFonctionnalitesParDefaut = (): {[key: string]: string} => {
   const handleLogout = async () => {
     await logout();
   };
+  // 🔒 Tant que la vérification d'authentification n'est pas finie
+if (authChecking) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
+      Vérification de sécurité…
+    </div>
+  );
+}
+
 
   if (loading) {
     return (

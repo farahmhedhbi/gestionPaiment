@@ -21,6 +21,7 @@ export default function AdminDashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState('');
   const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [adminId, setAdminId] = useState<number | null>(null);   // 🔥 Nouveau
   const router = useRouter();
 
   useEffect(() => {
@@ -48,35 +49,62 @@ export default function AdminDashboard() {
   };
 
   const verifyBackendAdminAccess = async () => {
-    try {
-      const authData = await apiService.checkAuth();
-      const roles = authData.roles || [];
-      setUserRoles(roles);
+  try {
+    const authData = await apiService.checkAuth();
 
-      const isAdminRole = roles.includes('ROLE_ADMIN');
-      setIsAdmin(isAdminRole);
-      setIsAuthenticated(true);
-
-      if (!isAdminRole) {
-        setError("Accès refusé. Droits administrateur requis.");
-        setLoading(false);
-        return;
-      }
-
-      await Promise.all([loadUsers(), loadFormateurs(), loadCoordinateurs()]);
-    } catch (err) {
-      console.error(err);
-      setError('Erreur de connexion au serveur.');
+    if (!authData.authenticated) {
+      setError("Vous devez être connecté.");
+      setIsAuthenticated(false);
       setLoading(false);
+      return;
     }
-  };
 
-  const loadUsers = async () => {
+    const roles = Array.isArray(authData.roles) ? authData.roles : [];
+    setUserRoles(roles);
+
+ 
+    setAdminId(authData.id ?? null);
+
+    const isAdminRole = roles.includes("ROLE_ADMIN");
+    setIsAdmin(isAdminRole);
+    setIsAuthenticated(true);
+
+    if (!isAdminRole) {
+      setError("Accès refusé. Droits administrateur requis.");
+      setLoading(false);
+      return;
+    }
+
+    await Promise.all([
+      loadUsers(authData.id),
+      loadFormateurs(),
+      loadCoordinateurs(),
+    ]);
+
+  } catch (err) {
+    console.error(err);
+    setError("Erreur de connexion au serveur.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  const loadUsers = async (currentAdminId?: number) => {
     setLoading(true);
     setError('');
     try {
       const data = await apiService.getUsers();
-      setUsers(data.filter(u => !u.roles.includes('ROLE_ADMIN')));
+
+      const idToExclude = currentAdminId ?? adminId;
+
+      if (idToExclude !== null) {
+        const filtered = data.filter(u => u.id !== idToExclude);   // 🔥 exclure l’admin connecté
+        setUsers(filtered);
+      } else {
+        setUsers(data);
+      }
+
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement des utilisateurs.');
     } finally {
@@ -109,36 +137,30 @@ export default function AdminDashboard() {
   };
 
   const handleDelete = async (id: number) => {
-  console.log('🔴 Click suppression - ID:', id, 'Type:', typeof id);
-  
-  if (!confirm('Voulez-vous vraiment supprimer cet utilisateur ?')) {
-    console.log('❌ Suppression annulée par l\'utilisateur');
-    return;
-  }
 
-  try {
-    console.log('🔄 Début suppression...');
-    setLoading(true);
-    
-    await apiService.deleteUser(id);
-    console.log('✅ Suppression API réussie');
-    
-    // Recharger les données
-    await loadUsers();
-    await loadFormateurs(); 
-    await loadCoordinateurs();
-    
-    console.log('✅ Données rechargées après suppression');
-    
-  } catch (error: any) {
-    console.error('❌ Erreur suppression complète:', error);
-    alert(`Erreur lors de la suppression: ${error.message}`);
-  } finally {
-    setLoading(false);
-  }
-};
+    if (adminId === id) {
+      alert("Vous ne pouvez pas supprimer votre propre compte administrateur !");
+      return;
+    }
 
-  
+    if (!confirm('Voulez-vous vraiment supprimer cet utilisateur ?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await apiService.deleteUser(id);
+
+      await loadUsers();
+      await loadFormateurs();
+      await loadCoordinateurs();
+
+    } catch (error: any) {
+      alert(`Erreur lors de la suppression: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const stats = {
     totalUsers: users.length,
@@ -147,6 +169,8 @@ export default function AdminDashboard() {
   };
 
   if (!isAuthenticated) {
+    console.log("➡️ ID admin connecté :", adminId);
+console.log("➡️ Users récupérés :", users);
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
         <div className="text-white text-center">
@@ -158,6 +182,8 @@ export default function AdminDashboard() {
   }
 
   if (!isAdmin) {
+    
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white">
         <header className="bg-white/10 backdrop-blur-lg border-b border-white/10 p-6">
@@ -299,7 +325,7 @@ export default function AdminDashboard() {
                 <UserCard
                   key={user.id}
                   user={user}
-                  onDelete={handleDelete}
+onDelete={user.id === adminId ? () => {} : handleDelete}
                 />
               ))}
             </div>

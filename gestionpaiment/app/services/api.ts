@@ -3,6 +3,10 @@ import { User, AuthResponse } from '@/app/types';
 const API_BASE_URL = 'http://localhost:8080/api';
 
 class ApiService {
+
+  // ===========================================================
+  // 🔒 Requête avec session + gestion JSON automatiquement
+  // ===========================================================
   private async fetchWithAuth(url: string, options: RequestInit = {}) {
     const response = await fetch(`${API_BASE_URL}${url}`, {
       ...options,
@@ -13,38 +17,39 @@ class ApiService {
       },
     });
 
+    const contentType = response.headers.get('content-type');
+    const responseText = await response.text();
+
+    // --- Gestion des erreurs ---
     if (!response.ok) {
-      const errorText = await response.text();
-      let errorMessage = errorText;
-      
+      let errorMessage = responseText;
+
       try {
-        const errorData = JSON.parse(errorText);
-        errorMessage = errorData.error || errorData.message || errorText;
+        const errorData = JSON.parse(responseText);
+        errorMessage = errorData.error || errorData.message || errorMessage;
       } catch {
-        // Garder le message d'erreur original
+        // si ce n'est pas du JSON, on garde le texte tel quel
       }
-      
+
       throw new Error(errorMessage);
     }
 
-    // Gestion spéciale pour les réponses DELETE et autres réponses non-JSON
-    const contentType = response.headers.get('content-type');
-    const responseText = await response.text();
-    
-    // Si la réponse est vide (comme pour DELETE) ou ne contient pas de JSON
+    // --- Réponse vide (DELETE etc.) ---
     if (!responseText || !contentType?.includes('application/json')) {
       return responseText || null;
     }
-    
-    // Sinon parser comme JSON
+
+    // --- Réponse JSON ---
     try {
       return JSON.parse(responseText);
     } catch {
       return responseText;
     }
-  } // ← Cette accolade ferme correctement la méthode fetchWithAuth
+  }
 
-  // Auth methods
+  // ===========================================================
+  // 🔐 AUTH
+  // ===========================================================
   async login(email: string, password: string): Promise<AuthResponse> {
     return this.fetchWithAuth('/auth/signin', {
       method: 'POST',
@@ -73,15 +78,24 @@ class ApiService {
     });
   }
 
-  async checkAuth(): Promise<User> {
-    return this.fetchWithAuth('/auth/check-auth');
+  // ⭐⭐⭐ CORRECTION ICI : checkAuth doit renvoyer un type générique ⭐⭐⭐
+  async checkAuth(): Promise<{ authenticated: boolean; id?: number; email?: string; roles?: string[] }> {
+    try {
+      return await this.fetchWithAuth('/auth/check-auth', {
+        method: 'GET',
+      });
+    } catch (e) {
+      return { authenticated: false }; // éviter les crashs côté Front
+    }
   }
 
   async logout(): Promise<void> {
     await this.fetchWithAuth('/auth/logout', { method: 'POST' });
   }
 
-  // User methods
+  // ===========================================================
+  // 👤 USER PROFILE
+  // ===========================================================
   async getUserProfile(): Promise<User> {
     return this.fetchWithAuth('/user/profile');
   }
@@ -93,11 +107,13 @@ class ApiService {
     });
   }
 
-  async getFonctionnalites(): Promise<{[key: string]: string}> {
+  async getFonctionnalites(): Promise<{ [key: string]: string }> {
     return this.fetchWithAuth('/user/fonctionnalites');
   }
 
-  // Admin methods
+  // ===========================================================
+  // 🛡️ ADMIN
+  // ===========================================================
   async getUsers(): Promise<User[]> {
     return this.fetchWithAuth('/admin/users');
   }
@@ -112,7 +128,7 @@ class ApiService {
 
   async deleteUser(userId: number): Promise<void> {
     console.log(`🗑️ Suppression utilisateur ID: ${userId}`);
-    
+
     try {
       await this.fetchWithAuth(`/admin/users/${userId}`, {
         method: 'DELETE',
@@ -123,6 +139,6 @@ class ApiService {
       throw error;
     }
   }
-} // ← Cette accolade ferme la classe ApiService
+}
 
 export const apiService = new ApiService();
