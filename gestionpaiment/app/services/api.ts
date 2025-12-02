@@ -139,6 +139,68 @@ class ApiService {
       throw error;
     }
   }
+  
+  // 🔵 Récupérer toutes les sessions
+async getSessions(): Promise<any[]> {
+  return this.fetchWithAuth('/admin/session/all');
 }
+
+
+
+
+  // 🟣 Créer une session
+  async createSession(data: any): Promise<any> {
+    return this.fetchWithAuth('/admin/session/create', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+async assignFormateur(sessionId: number, formateurId: number) {
+  return this.fetchWithAuth(
+    `/admin/session/${sessionId}/assign-formateur/${formateurId}`, // CORRIGÉ
+    { method: "POST" }
+  );
+}
+async addAffectation(sessionId: number, formateurId: number, coordId: number) {
+  return this.fetchWithAuth(
+    `/admin/session/${sessionId}/affecter?formateurId=${formateurId}&coordinateurId=${coordId}`,
+    { method: "POST" }
+  );
+}
+
+
+async assignCoordinateur(sessionId: number, coordId: number) {
+  return this.fetchWithAuth(
+    `/admin/session/${sessionId}/assign-coordinateur/${coordId}`, // CORRIGÉ
+    { method: "POST" }
+  );
+}
+
+async getSessionsByFormateur(id: number) {
+  return this.fetchWithAuth(`/formateur/${id}/sessions`);
+}
+
+async getSessionsByCoordinateur(id: number) {
+  return this.fetchWithAuth(`/coordinateur/${id}/sessions`);
+}
+
+
+
+
+
+
+
+
+
+  // ❌ Supprimer une session
+  async deleteSession(id: number): Promise<void> {
+    return this.fetchWithAuth(`/admin/session/${id}`, {
+      method: 'DELETE',
+    });
+  }
+}
+
+
+
 
 export const apiService = new ApiService();

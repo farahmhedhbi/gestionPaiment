@@ -30,3 +30,23 @@ export interface FloatingEmoji {
   size: string;
   opacity: string;
 }
+export interface Session {
+  id: number;
+  classe: string;
+  specialite: string;
+  promotion: string;
+  niveau: string;
+  semestre: string;
+  dateDebut: string;
+  dateFin: string;
+
+  affectations: SessionAffectation[]; // 🔥 ajout obligatoire
+}
+
+export interface SessionAffectation {
+  id: number;
+  formateur: User;
+  coordinateur: User;
+  dateAffectation: string;
+}
+

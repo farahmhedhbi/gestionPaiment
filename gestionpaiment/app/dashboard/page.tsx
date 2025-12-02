@@ -61,6 +61,8 @@ export default function DashboardPage() {
   const [cinModified, setCinModified] = useState(false);
   const [nameModified, setNameModified] = useState(false);
   const [fonctionnalites, setFonctionnalites] = useState<{[key: string]: string}>({});
+  const [mesSessions, setMesSessions] = useState<any[]>([]);
+
 
   const isCoordinateur = authUser?.roles?.some(
     (role: string) => role.includes("COORDINATEUR") || role.includes("ADMIN")
@@ -73,6 +75,47 @@ export default function DashboardPage() {
   useEffect(() => {
     if (isEditing) setShowProfileMenu(false);
   }, [isEditing]);
+
+  useEffect(() => {
+  if (authUser?.id) {
+    chargerSessions();
+  }
+}, [authUser]);
+const chargerSessions = async () => {
+  if (!authUser?.id) return;
+
+  try {
+    let sessionsFormateur = [];
+    let sessionsCoord = [];
+
+    const isFormateur = authUser.roles?.includes("ROLE_FORMATEUR");
+    const isCoordinateur = authUser.roles?.includes("ROLE_COORDINATEUR");
+
+    // 🔵 Charger sessions formateur
+    if (isFormateur) {
+      try {
+        sessionsFormateur = await apiService.getSessionsByFormateur(authUser.id);
+      } catch {}
+    }
+
+    // 🟣 Charger sessions coordinateur
+    if (isCoordinateur) {
+      try {
+        sessionsCoord = await apiService.getSessionsByCoordinateur(authUser.id);
+      } catch {}
+    }
+
+    // ⬅ Fusionner les deux (et éviter les doublons)
+    const all = [...sessionsFormateur, ...sessionsCoord];
+
+    setMesSessions(all);
+
+  } catch (err) {
+    console.error("Erreur chargement sessions :", err);
+  }
+};
+
+
 
   const loadUserData = async () => {
     try {
@@ -396,6 +439,41 @@ if (authChecking) {
           </div>
         </div>
       </main>
+      {/* --- BLOC : MES SESSIONS --- */}
+<div className="mt-10 bg-white/10 p-6 rounded-2xl border border-white/10 backdrop-blur-xl">
+  <h2 className="text-2xl font-bold text-cyan-300 mb-4">
+    📘 Mes Sessions
+  </h2>
+
+  {mesSessions.length === 0 ? (
+    <p className="text-white/60">Aucune session assignée.</p>
+  ) : (
+    <div className="grid md:grid-cols-2 gap-4">
+      {mesSessions.map((s) => (
+        <div
+          key={s.id}
+          className="bg-white/5 border border-white/10 p-4 rounded-xl hover:bg-white/10 transition"
+        >
+          <h3 className="text-lg font-semibold text-white mb-1">
+            {s.classe} – {s.specialite}
+          </h3>
+
+          <p className="text-white/70 text-sm">
+            Promotion : <b>{s.promotion}</b>
+          </p>
+          <p className="text-white/70 text-sm">
+            Niveau : {s.niveau} | Semestre : {s.semestre}
+          </p>
+
+          <p className="text-cyan-300 text-sm mt-2">
+            📅 {s.dateDebut} → {s.dateFin}
+          </p>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+
 
       {/* Footer */}
       <footer className="bg-slate-800/80 backdrop-blur-lg border-t border-cyan-500/20 p-6 mt-12">

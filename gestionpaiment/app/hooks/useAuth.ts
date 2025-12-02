@@ -14,8 +14,27 @@ export const useAuth = () => {
 
   const checkAuth = async () => {
     try {
-      const userData = await apiService.checkAuth();
-      setUser(userData);
+      const res = await apiService.checkAuth();
+
+      if (res.authenticated) {
+        // Construire un vrai user minimal
+        const loggedUser: User = {
+          id: res.id!,
+          email: res.email!,
+          roles: res.roles || [],
+          firstName: "",
+          lastName: "",
+          cin: "",
+          rib: "",
+          bankName: "",
+          fonctionnalite: ""
+        };
+
+        setUser(loggedUser);
+      } else {
+        setUser(null);
+      }
+
     } catch (error) {
       setUser(null);
     } finally {
@@ -24,15 +43,37 @@ export const useAuth = () => {
   };
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
-    try {
-      const response = await apiService.login(email, password);
-      setUser(response.user);
-      return response;
-    } finally {
-      setLoading(false);
+  setLoading(true);
+  try {
+    // 1) On fait le login
+    const response = await apiService.login(email, password);
+
+    // 2) Puis immédiatement checkAuth pour récupérer les vraies infos utilisateur
+    const authData = await apiService.checkAuth();
+
+    if (authData.authenticated) {
+      const loggedUser: User = {
+        id: authData.id!,
+        email: authData.email!,
+        roles: authData.roles || [],
+        firstName: "",
+        lastName: "",
+        cin: "",
+        rib: "",
+        bankName: "",
+        fonctionnalite: ""
+      };
+
+      setUser(loggedUser);
     }
-  };
+
+    return response;
+
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const logout = async () => {
     await apiService.logout();
